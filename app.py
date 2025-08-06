@@ -192,7 +192,7 @@ def main():
             # Center the image using columns with more space for the image
             img_col1, img_col2, img_col3 = st.columns([0.2, 1.6, 0.2])
             with img_col2:
-                st.image(image, caption="Uploaded Image", use_column_width=True)
+                st.image(image, caption="Uploaded Image")
             
             # Center the process button
             btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 1])
@@ -207,7 +207,7 @@ def main():
                 result_chart_path = "runs/detect/train/results.png"
                 if os.path.exists(result_chart_path):
                     st.subheader("Training Results")
-                    st.image(result_chart_path, caption="Model Training Results", use_column_width=True)
+                    st.image(result_chart_path, caption="Model Training Results")
                 else:
                     st.info("Result chart (result.png) not found. Please ensure the file exists in the project directory.")
                 
@@ -215,7 +215,7 @@ def main():
                 confusion_matrix_path = "runs/detect/train/confusion_matrix_normalized.png"
                 if os.path.exists(confusion_matrix_path):
                     st.subheader("Confusion Matrix")
-                    st.image(confusion_matrix_path, caption="Normalized Confusion Matrix", use_column_width=True)
+                    st.image(confusion_matrix_path, caption="Normalized Confusion Matrix")
                 else:
                     st.info("Confusion matrix (confusion_matrix_normalized.png) not found. Please ensure the file exists in the project directory.")
             
@@ -230,8 +230,8 @@ def main():
                         # Center the result image using columns with more space
                         result_col1, result_col2, result_col3 = st.columns([0.2, 1.6, 0.2])
                         with result_col2:
-                            st.image(processed_image, caption="Processed Image with Detections", use_column_width=True)
-                        
+                            st.image(processed_image, caption="Processed Image with Detections")
+
                         # Option to download result
                         result_pil = Image.fromarray(processed_image)
                         
