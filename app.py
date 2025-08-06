@@ -3,7 +3,7 @@ import torch
 import numpy as np
 from ultralytics import YOLO
 import ultralytics.nn.tasks as tasks
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import tempfile
 import os
 
@@ -50,16 +50,27 @@ def detect_objects_in_image(image, model, confidence_threshold=0.5):
         Processed image with detections
     """
     try:
-        # Convert PIL to numpy array if needed
-        if isinstance(image, Image.Image):
-            image_array = np.array(image)
-            # Convert RGB to BGR for OpenCV (headless version)
-            image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
+        # Convert to PIL Image if needed
+        if isinstance(image, np.ndarray):
+            pil_image = Image.fromarray(image)
         else:
-            image_array = image.copy()
+            pil_image = image.copy()
+        
+        # Convert PIL to numpy array for YOLO processing
+        image_array = np.array(pil_image)
         
         # Run inference
         results = model(image_array)
+        
+        # Create a copy for drawing
+        draw_image = pil_image.copy()
+        draw = ImageDraw.Draw(draw_image)
+        
+        # Try to load a font (fallback to default if not available)
+        try:
+            font = ImageFont.truetype("arial.ttf", 15)
+        except:
+            font = ImageFont.load_default()
         
         # Process results
         for result in results:
@@ -79,24 +90,30 @@ def detect_objects_in_image(image, model, confidence_threshold=0.5):
                             point = label.split()[1]
                             label = 'weapon ' + point
                         
-                        # Color based on class
-                        color = (0, int(cls[pos]) * 50, 255)
+                        # Color based on class (RGB format for PIL)
+                        color = (255, int(cls[pos]) * 50, 0)  # Red-orange color
                         
                         # Draw bounding box
-                        cv2.rectangle(image_array, 
-                                    (int(xmin), int(ymin)), 
-                                    (int(xmax), int(ymax)), 
-                                    color, 2)
+                        draw.rectangle(
+                            [(int(xmin), int(ymin)), (int(xmax), int(ymax))],
+                            outline=color,
+                            width=2
+                        )
                         
-                        # Draw label
-                        cv2.putText(image_array, label, 
-                                  (int(xmin), int(ymin) - 10), 
-                                  cv2.FONT_HERSHEY_SIMPLEX, 
-                                  0.5, color, 1, cv2.LINE_AA)
+                        # Draw label background
+                        bbox = draw.textbbox((int(xmin), int(ymin) - 20), label, font=font)
+                        draw.rectangle(bbox, fill=color)
+                        
+                        # Draw label text
+                        draw.text(
+                            (int(xmin), int(ymin) - 20),
+                            label,
+                            fill=(255, 255, 255),  # White text
+                            font=font
+                        )
         
-        # Convert back to RGB for display
-        image_rgb = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
-        return image_rgb
+        # Convert back to numpy array for return
+        return np.array(draw_image)
     
     except Exception as e:
         st.error(f"Error in image processing: {str(e)}")
