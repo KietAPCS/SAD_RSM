@@ -1,5 +1,4 @@
 import streamlit as st
-import cv2
 import torch
 import numpy as np
 from ultralytics import YOLO
@@ -50,53 +49,59 @@ def detect_objects_in_image(image, model, confidence_threshold=0.5):
     Returns:
         Processed image with detections
     """
-    # Convert PIL to numpy array if needed
-    if isinstance(image, Image.Image):
-        image_array = np.array(image)
-        # Convert RGB to BGR for OpenCV
-        image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
-    else:
-        image_array = image.copy()
+    try:
+        # Convert PIL to numpy array if needed
+        if isinstance(image, Image.Image):
+            image_array = np.array(image)
+            # Convert RGB to BGR for OpenCV (headless version)
+            image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
+        else:
+            image_array = image.copy()
+        
+        # Run inference
+        results = model(image_array)
+        
+        # Process results
+        for result in results:
+            if result.boxes is not None:
+                classes = result.names
+                cls = result.boxes.cls
+                conf = result.boxes.conf
+                detections = result.boxes.xyxy
+                
+                for pos, detection in enumerate(detections):
+                    if conf[pos] >= confidence_threshold:
+                        xmin, ymin, xmax, ymax = detection
+                        label = f"{classes[int(cls[pos])]} {conf[pos]:.2f}"
+                        
+                        # Apply the same label modification as in your original code
+                        if label.split()[0]:
+                            point = label.split()[1]
+                            label = 'weapon ' + point
+                        
+                        # Color based on class
+                        color = (0, int(cls[pos]) * 50, 255)
+                        
+                        # Draw bounding box
+                        cv2.rectangle(image_array, 
+                                    (int(xmin), int(ymin)), 
+                                    (int(xmax), int(ymax)), 
+                                    color, 2)
+                        
+                        # Draw label
+                        cv2.putText(image_array, label, 
+                                  (int(xmin), int(ymin) - 10), 
+                                  cv2.FONT_HERSHEY_SIMPLEX, 
+                                  0.5, color, 1, cv2.LINE_AA)
+        
+        # Convert back to RGB for display
+        image_rgb = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
+        return image_rgb
     
-    # Run inference
-    results = model(image_array)
-    
-    # Process results
-    for result in results:
-        if result.boxes is not None:
-            classes = result.names
-            cls = result.boxes.cls
-            conf = result.boxes.conf
-            detections = result.boxes.xyxy
-            
-            for pos, detection in enumerate(detections):
-                if conf[pos] >= confidence_threshold:
-                    xmin, ymin, xmax, ymax = detection
-                    label = f"{classes[int(cls[pos])]} {conf[pos]:.2f}"
-                    
-                    # Apply the same label modification as in your original code
-                    if label.split()[0]:
-                        point = label.split()[1]
-                        label = 'weapon ' + point
-                    
-                    # Color based on class
-                    color = (0, int(cls[pos]) * 50, 255)
-                    
-                    # Draw bounding box
-                    cv2.rectangle(image_array, 
-                                (int(xmin), int(ymin)), 
-                                (int(xmax), int(ymax)), 
-                                color, 2)
-                    
-                    # Draw label
-                    cv2.putText(image_array, label, 
-                              (int(xmin), int(ymin) - 10), 
-                              cv2.FONT_HERSHEY_SIMPLEX, 
-                              0.5, color, 1, cv2.LINE_AA)
-    
-    # Convert back to RGB for display
-    image_rgb = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
-    return image_rgb
+    except Exception as e:
+        st.error(f"Error in image processing: {str(e)}")
+        # Return original image if processing fails
+        return np.array(image) if isinstance(image, Image.Image) else image
 
 def main():
     # Title and description

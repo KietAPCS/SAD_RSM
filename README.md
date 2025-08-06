@@ -23,7 +23,7 @@ pip install -r requirements.txt
 Make sure your trained YOLO model is located at:
 
 ```
-./runs/detect/Normal_Compressed/weights/best.pt
+./runs/detect/train/weights/best.pt
 ```
 
 ### 3. Add Demo Video (Optional)
@@ -41,6 +41,30 @@ streamlit run app.py
 ```
 
 The application will open in your default web browser, typically at `http://localhost:8501`
+
+## Cloud Deployment
+
+### For Streamlit Cloud:
+
+1. **Push to GitHub**: Ensure your code is in a GitHub repository
+2. **Files Required for Deployment**:
+   - `requirements.txt` (uses opencv-python-headless for cloud compatibility)
+   - `packages.txt` (system dependencies for OpenCV)
+   - `.streamlit/config.toml` (deployment configuration)
+3. **Connect to Streamlit Cloud**: Visit [share.streamlit.io](https://share.streamlit.io)
+4. **Deploy**: Select your repository and branch
+
+### For Other Platforms:
+
+- **Heroku**: Add buildpacks for system dependencies
+- **Railway**: Similar to Streamlit Cloud approach
+- **Render**: Use Docker with system packages
+
+### Important Notes for Deployment:
+
+- Uses `opencv-python-headless` instead of `opencv-python` to avoid OpenGL issues
+- Includes system dependencies in `packages.txt` for cloud environments
+- Model file must be included in your repository or accessible via URL
 
 ## File Structure
 
@@ -108,4 +132,5 @@ weapon_detection_with_others/
 ## Note
 
 This application is designed for educational and demonstration purposes. The model's accuracy depends on the training data and may not detect all types of weapons or may produce false positives.
+
 # SAD_RSM

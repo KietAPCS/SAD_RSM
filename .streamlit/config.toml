@@ -1,0 +1,8 @@
+# Streamlit Configuration for Deployment
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
